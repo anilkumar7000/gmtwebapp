@@ -1,3 +1,5 @@
+import {photosURL} from './endpoints.js';
+
  // Save photos to session storage
 function savePhotos (photos) {
     sessionStorage.setItem('photos', JSON.stringify(photos));
@@ -20,7 +22,7 @@ function getSavedPhotos () {
 
         // Otherwise, fetch fresh data from the api 
         try {
-            let response = await fetch('https://members.gomakethings.com/course-apis/photos.json');
+            let response = await fetch(photosURL);
                 console.log(response);
                 if(!response.ok) throw response;
                 let photos = await response.json();

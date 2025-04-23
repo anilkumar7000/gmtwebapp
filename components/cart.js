@@ -25,10 +25,25 @@ function removeFromCart (id) {
 	localStorage.setItem('cart', JSON.stringify(cart));
 }
 
+// Get data for just photos that are in the cart
+
+function getPhotosInCart (photos) {
+	return photos.filter(function (photo) {
+		return inCart(photo.id);
+	});
+}
+
+function emptyCart () {
+	for (let key in cart) {
+		delete cart[key];
+	}
+	localStorage.removeItem('cart');
+}
+
 // Create cart count component
 component('#cart-count', cartCountHTML);
 
-export {addToCart, removeFromCart, inCart};
+export {addToCart, removeFromCart, inCart, getPhotosInCart, emptyCart};
 
 
 

@@ -32,20 +32,22 @@
 			<script type="module">
 				import {store, component} from 'https://cdn.jsdelivr.net/npm/reefjs@12/dist/reef.es.min.js';
 				import {getPhotos} from './components/api.js';
-				import {removeFromCart, inCart} from './components/cart.js';
+				import {removeFromCart, getPhotosInCart} from './components/cart.js';
 				import {getPhotoByID} from './components/utilities.js';
+				import {stripeURL} from './components/endpoints.js';
 
 				// Hold the photo data
 				let photos = [];
 
 				// Current Status
 				let status = store([]);
+				let submitting = false;
 
 				// Generate the cart HTML
 				function cartHTML() {
-					let photosInCart = photos.filter(function(photo) {
-						return inCart(photo.id);
-					});
+					// Get the photos that are in the cart
+
+					let photosInCart = getPhotosInCart(photos);
 
 					// If there are no items in the cart
 					if (!photosInCart.length) {
@@ -83,18 +85,21 @@
 								return total + photo.price;
 								}, 0)}
 						</p>
+
+						<p class="text-right">
+							<button data-checkout>Complete Checkout</button>
+						</p>	
 								<div aria-live="polite">${status.join('<br>')}</div>`;
 
 				}
-
-				
-
-
-
-				// Handle event clicks
-				function clickHandler(event) {
+		
+				// Remove an item from the cart
+				function removeCartItem (event) {
+					// Get the photo ID
 					let id = event.target.getAttribute('data-remove-from-cart');
 					if(!id) return;
+
+					if (submitting) return;
 
 					// Remove the item from the cart
 					removeFromCart(id);
@@ -111,6 +116,56 @@
 					}, 3000);
 				}
 
+				async function checkout (event) {
+					// Only run for [data-checkout] button
+					if (!event.target.hasAttribute('data-checkout')) return;
+
+					// If already submitting, ignore click
+					if (submitting) return;
+
+					//Update status
+					status[0] = 'Redirecting to checkout...';
+					submitting = true;
+
+					try {
+						// Call the API
+						let sessionRequest = await fetch(stripeURL, {
+							method: 'POST',
+							headers: {
+								'Content-type': 'application/json'								
+							},
+							body: JSON.stringify({
+								cart: getPhotosInCart(photos).map(function(photo) {
+									return photo.id;									
+								}),
+								success_url: 'http://localhost:3000/success.html',
+								cancel_url: 'http://localhost:3000/checkout.html',
+							})
+						});
+
+						// If there's a problem, throw an error
+						if (!sessionRequest.ok) throw sessionRequest;
+
+						// Get the session data
+						let session = await sessionRequest.json();
+
+						// Redirect to stripe checkout
+						window.location.href = session.url;
+					} catch (error) {
+						console.warn(error);
+						status[0] = 'Unable to checkout. Please try again.';
+						submitting = false;
+					}
+				}
+
+
+
+				// Handle event clicks
+				function clickHandler(event) {
+					removeCartItem(event);
+					checkout(event);
+				}
+
 
 
 				// Initialize
@@ -124,3 +179,5 @@
 			</script>
 		</body>
 </html>
+
+
