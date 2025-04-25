@@ -1,13 +1,8 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run "npm run dev" in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run "npm run deploy" to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
-
+let headers = new Headers({
+	'Access-Control-Allow-Origin': 'http://localhost:3000',
+	'Access-Control-Allow-Methods': 'HEAD, POST, OPTIONS',
+	'Access-Control-Allow-Headers': '*'
+});
 
 /**
  * Create a PHP-style query string from an object
@@ -51,12 +46,6 @@ function buildQuery (data, prefix) {
  */
 async function handleRequest(request) {
 
-	let headers = new Headers({
-		'Access-Control-Allow-Origin': 'http://localhost:3000',
-		'Access-Control-Allow-Methods': 'HEAD, POST, OPTIONS',
-		'Access-Control-Allow-Headers': '*'
-	});
-
 	// Catch-all for non-POST request types
 	if (request.method !== 'POST') {
 		return new Response('ok', {
@@ -77,7 +66,7 @@ async function handleRequest(request) {
 		// Create line items
 		let line_items = photos.filter(function (photo) {
 			return cart.includes(photo.id);
-		}).map(function (item){
+		}).map(function (item) {
 			return {
 				price_data: {
 					currency: 'usd',
